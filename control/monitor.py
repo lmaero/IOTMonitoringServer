@@ -88,6 +88,7 @@ def analyze_temperature_average():
         city = item['station__location__city__name']
         user = item['station__user__username']
 
+        print(f"Nombre de la variable: {variable}")
         if variable == 'temperatura':
             print(f'Valor promedio: {item["check_value"]}')
             print(f'Valor mínimo: {min_value}')
