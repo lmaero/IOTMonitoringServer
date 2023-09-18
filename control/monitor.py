@@ -88,11 +88,10 @@ def analyze_temperature_average():
         city = item['station__location__city__name']
         user = item['station__user__username']
 
-        print(f'Valor mínimo: {min_value}')
-        print(f'Valor promedio: {item["check_value"]}')
-        print(variable == 'temperatura' and item["check_value"] > min_value)
-
         if variable == 'temperatura' and item["check_value"] > min_value:
+            print(f'Valor mínimo: {min_value}')
+            print(f'Valor promedio: {item["check_value"]}')
+            print(variable == 'temperatura' and item["check_value"] > min_value)
             message = (f'Estado normal para: {variable}. Promedio: '
                        f'{item["check_value"]}. Valor mínimo: {min_value}')
             topic = f'{country}/{state}/{city}/{user}/in'
