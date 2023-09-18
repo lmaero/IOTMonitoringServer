@@ -60,49 +60,29 @@ def analyze_data():
 
 
 def analyze_temperature_average():
-    # Consulta el promedio de la temperatura de los últimos 5 minutos
-    # Compara el valor mínimo con el promedio.
-    # Si el promedio está por encima del valor mínimo envía el mensaje "normal"
-
-    print("Verificando temperatura...")
-
-    data = Data.objects.filter(
-        base_time__gte=datetime.now() - timedelta(minutes=5))
-    aggregation = data.annotate(check_value=Avg('avg_value')) \
+    data = Data.objects.filter(measurement_id=1).all().order_by('-avg_value') \
         .select_related('station', 'measurement') \
         .select_related('station__user', 'station__location') \
         .select_related('station__location__city', 'station__location__state',
                         'station__location__country') \
-        .values('check_value', 'station__user__username',
+        .values('avg_value', 'station__user__username',
                 'measurement__name',
-                'measurement__min_value',
                 'station__location__city__name',
                 'station__location__state__name',
-                'station__location__country__name')
+                'station__location__country__name'
+                )
 
-    for item in aggregation:
-        print(item)
-
-        variable = item["measurement__name"]
-        min_value = item["measurement__min_value"] or 0
-
-        country = item['station__location__country__name']
-        state = item['station__location__state__name']
-        city = item['station__location__city__name']
-        user = item['station__user__username']
-
-        print(f"Nombre de la variable: {variable}")
-        if variable == 'temperatura':
-            print(f'Valor promedio: {item["check_value"]}')
-            print(f'Valor mínimo: {min_value}')
-            print(item["check_value"] > min_value)
-
-            if item["check_value"] > min_value:
-                message = (f'Estado normal para: {variable}. Promedio: '
-                           f'{item["check_value"]}. Valor mínimo: {min_value}')
-                topic = f'{country}/{state}/{city}/{user}/in'
-                print(datetime.now(), f"Sending message to {topic} {variable}")
-                client.publish(topic, message)
+    variable = data[0]['measurement__name']
+    avg_value = data[0]['avg_value']
+    country = data[0]['station__location__country__name']
+    state = data[0]['station__location__state__name']
+    city = data[0]['station__location__city__name']
+    user = data[0]['station__user__username']
+    print('Promedio temperatura obtenido: ', avg_value)
+    message = f"AVG_VALUE: {avg_value}"
+    topic = f'{country}/{state}/{city}/{user}/in'
+    print(datetime.now(), f"Sending measurement to {topic} {variable}")
+    client.publish(topic, message)
 
 
 def on_connect(client, userdata, flags, rc):
