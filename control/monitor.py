@@ -59,6 +59,45 @@ def analyze_data():
     print(alerts, "alertas enviadas")
 
 
+def analyze_temperature_average():
+    # Consulta el promedio de la temperatura de los últimos 5 minutos
+    # Compara el valor mínimo con el promedio.
+    # Si el promedio está por encima del valor mínimo envía el mensaje "normal"
+
+    print("Verificando temperatura...")
+
+    data = Data.objects.filter(
+        base_time__gte=datetime.now() - timedelta(minutes=5)).exclude(
+        measurement_id=2)
+    aggregation = data.annotate(check_value=Avg('avg_value')) \
+        .select_related('station', 'measurement') \
+        .select_related('station__user', 'station__location') \
+        .select_related('station__location__city', 'station__location__state',
+                        'station__location__country') \
+        .values('check_value', 'station__user__username',
+                'measurement__name',
+                'measurement__min_value',
+                'station__location__city__name',
+                'station__location__state__name',
+                'station__location__country__name')
+    for item in aggregation:
+
+        variable = item["measurement__name"]
+        min_value = item["measurement__min_value"] or 0
+
+        country = item['station__location__country__name']
+        state = item['station__location__state__name']
+        city = item['station__location__city__name']
+        user = item['station__user__username']
+
+        if item["check_value"] > min_value:
+            message = (f'Estado normal para: {variable}. Promedio: '
+                       f'{item["check_value"]}. Valor mínimo: {min_value}')
+            topic = f'{country}/{state}/{city}/{user}/in'
+            print(datetime.now(), f"Sending message to {topic} {variable}")
+            client.publish(topic, message)
+
+
 def on_connect(client, userdata, flags, rc):
     '''
     Función que se ejecuta cuando se conecta al bróker.
@@ -106,6 +145,10 @@ def start_cron():
     '''
     print("Iniciando cron...")
     schedule.every(5).minutes.do(analyze_data)
+
+    print("Iniciando analizador de promedio de temperatura...")
+    schedule.every(30).seconds.do(analyze_temperature_average)
+
     print("Servicio de control iniciado")
     while 1:
         schedule.run_pending()
