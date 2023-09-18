@@ -79,7 +79,10 @@ def analyze_temperature_average():
                 'station__location__city__name',
                 'station__location__state__name',
                 'station__location__country__name')
+
     for item in aggregation:
+        print(item)
+
         variable = item["measurement__name"]
         min_value = item["measurement__min_value"] or 0
 
