@@ -67,8 +67,7 @@ def analyze_temperature_average():
     print("Verificando temperatura...")
 
     data = Data.objects.filter(
-        base_time__gte=datetime.now() - timedelta(minutes=5)).exclude(
-        measurement_id=2)
+        base_time__gte=datetime.now() - timedelta(minutes=5))
     aggregation = data.annotate(check_value=Avg('avg_value')) \
         .select_related('station', 'measurement') \
         .select_related('station__user', 'station__location') \
@@ -91,9 +90,9 @@ def analyze_temperature_average():
 
         print(f'Valor mínimo: {min_value}')
         print(f'Valor promedio: {item["check_value"]}')
-        print(item["check_value"] > min_value)
+        print(variable == 'temperatura' and item["check_value"] > min_value)
 
-        if item["check_value"] > min_value:
+        if variable == 'temperatura' and item["check_value"] > min_value:
             message = (f'Estado normal para: {variable}. Promedio: '
                        f'{item["check_value"]}. Valor mínimo: {min_value}')
             topic = f'{country}/{state}/{city}/{user}/in'
