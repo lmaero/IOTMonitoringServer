@@ -81,7 +81,6 @@ def analyze_temperature_average():
                 'station__location__state__name',
                 'station__location__country__name')
     for item in aggregation:
-
         variable = item["measurement__name"]
         min_value = item["measurement__min_value"] or 0
 
@@ -89,6 +88,10 @@ def analyze_temperature_average():
         state = item['station__location__state__name']
         city = item['station__location__city__name']
         user = item['station__user__username']
+
+        print(f'Valor mínimo: {min_value}')
+        print(f'Valor promedio: {item["check_value"]}')
+        print(item["check_value"] > min_value)
 
         if item["check_value"] > min_value:
             message = (f'Estado normal para: {variable}. Promedio: '
